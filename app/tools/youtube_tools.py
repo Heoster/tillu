@@ -13,6 +13,7 @@ Features:
 """
 
 import httpx
+import os
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 import asyncio
@@ -23,13 +24,17 @@ from app.utils.logging import get_logger
 
 logger = get_logger("youtube_tools")
 
-# Try to import CrewAI YouTube tools
+# Try to import CrewAI YouTube tools (optional)
 try:
     from crewai_tools import YoutubeVideoSearchTool
     CREWAI_AVAILABLE = True
 except ImportError:
     CREWAI_AVAILABLE = False
-    logger.warning("CrewAI not available, YouTube tools will use fallback implementation")
+    logger.debug("CrewAI not available, YouTube tools will use fallback implementation")
+except Exception as e:
+    # CrewAI might fail to import if OPENAI_API_KEY is not set
+    CREWAI_AVAILABLE = False
+    logger.debug(f"CrewAI initialization failed (likely missing OPENAI_API_KEY): {e}")
 
 
 class YouTubeSearchTool(BaseTool):
@@ -56,12 +61,15 @@ class YouTubeSearchTool(BaseTool):
     def __init__(self):
         super().__init__()
         self.crewai_tool = None
-        if CREWAI_AVAILABLE:
+        if CREWAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
             try:
                 self.crewai_tool = YoutubeVideoSearchTool()
                 logger.info("CrewAI YouTube tool initialized")
             except Exception as e:
-                logger.warning(f"Failed to initialize CrewAI YouTube tool: {e}")
+                logger.debug(f"Failed to initialize CrewAI YouTube tool: {e}")
+                self.crewai_tool = None
+        elif CREWAI_AVAILABLE:
+            logger.debug("CrewAI available but OPENAI_API_KEY not set, using fallback YouTube search")
     
     async def execute(
         self,

@@ -1,245 +1,202 @@
-# TILLU Backend — Deployment Checklist (May 2026)
+# TILLU Deployment Checklist
 
-## Pre-Deployment Testing
+## Pre-Deployment
 
-### Local Development
-- [ ] Install updated dependencies: `pip install --upgrade -r requirements.txt`
-- [ ] Run type checking: `mypy app/`
-- [ ] Run linter: `ruff check app/`
-- [ ] Format code: `black app/`
-- [ ] Run tests: `pytest`
-- [ ] Test API locally: `uvicorn app.main:app --reload`
+- [ ] All tests passing
+- [ ] No import errors
+- [ ] No hardcoded secrets
+- [ ] Environment variables documented
+- [ ] Dependencies optimized (no heavy packages)
+- [ ] Memory usage < 512MB
+- [ ] Port binding to 0.0.0.0:8000
 
-### Dependency Compatibility
-- [ ] Verify LangChain 0.3 API compatibility with existing chains
-- [ ] Test Pydantic 2.10 model validation
-- [ ] Verify SQLAlchemy 2.1 ORM operations
-- [ ] Test Playwright 1.48 browser automation
-- [ ] Verify Torch 2.5 model loading
+## Backend Deployment (Render)
 
-### Integration Testing
-- [ ] Test Supabase 2.5 connection
-- [ ] Test Redis 5.2 connection
-- [ ] Test OpenAI 1.52 API calls
-- [ ] Test Groq 0.9 API calls
-- [ ] Test Anthropic 0.42 API calls
-- [ ] Test Google Generative AI 0.8 API calls
-- [ ] Test Cohere 5.11 API calls
+### Setup
 
----
+- [ ] Create Render account
+- [ ] Connect GitHub repository
+- [ ] Create new Web Service
+- [ ] Select Python runtime
+- [ ] Set build command: `pip install -r requirements.txt`
+- [ ] Set start command: `gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000`
 
-## Hugging Face Spaces Deployment
+### Environment Variables
 
-### WebSearch Space
-- [ ] Update `deployments/huggingface/websearch-space/Dockerfile`
-- [ ] Update `deployments/huggingface/websearch-space/requirements.txt`
-- [ ] Trigger rebuild from HF Space settings
-- [ ] Monitor build logs (typically 5-10 minutes)
-- [ ] Test `/health` endpoint
-- [ ] Test `/search` endpoint
-- [ ] Test `/scrape` endpoint
-- [ ] Test `/intelligence` endpoint
+- [ ] `SUPABASE_URL` - Database URL
+- [ ] `SUPABASE_KEY` - Anon key
+- [ ] `GROQ_API_KEY` - Groq API key
+- [ ] `CEREBRAS_API_KEY` - Cerebras API key
+- [ ] `TOGETHER_API_KEY` - Together AI key
+- [ ] `GOOGLE_API_KEY` - Google Gemini key
+- [ ] `OPENROUTER_API_KEY` - OpenRouter key
+- [ ] `CLOUDFLARE_API_TOKEN` - Cloudflare token
+- [ ] `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
+- [ ] `REDIS_URL` - Redis connection URL
+- [ ] `JWT_SECRET` - JWT signing secret
+- [ ] `ENVIRONMENT` - Set to `production`
+- [ ] `LOG_LEVEL` - Set to `info`
 
-### Daemon Space
-- [ ] Update `deployments/huggingface/daemon-space/requirements.txt`
-- [ ] Trigger rebuild from HF Space settings
-- [ ] Monitor build logs
-- [ ] Verify daemon startup
-- [ ] Test background job processing
+### Verification
 
-### n8n Engine Space
-- [ ] Update `deployments/huggingface/n8n-space/Dockerfile`
-- [ ] Update n8n version to 2.20.0
-- [ ] Trigger rebuild from HF Space settings
-- [ ] Monitor build logs (typically 10-15 minutes)
-- [ ] Verify n8n UI loads at https://tillu-ai-tillu-engine.hf.space
-- [ ] Test workflow execution
-- [ ] Verify webhook connectivity
+- [ ] Service deployed successfully
+- [ ] Health check passing: `GET /health`
+- [ ] API responding: `GET /`
+- [ ] No errors in logs
+- [ ] Port 8000 is bound
+- [ ] Memory usage < 512MB
 
----
+## Gateway Deployment (HuggingFace Spaces)
 
-## Render Deployment
+### Setup
 
-### WebSearch Service
-- [ ] Update `deployments/render/Dockerfile.websearch`
-- [ ] Push changes to git
-- [ ] Trigger manual deploy from Render dashboard
-- [ ] Monitor deployment logs
-- [ ] Test service endpoints
+- [ ] Create HuggingFace account
+- [ ] Create new Space
+- [ ] Select Streamlit SDK
+- [ ] Upload `deployments/huggingface/tillu-gateway/` files
+- [ ] Add repository secret: `TILLU_API_URL`
 
-### Gateway Service
-- [ ] Update main `Dockerfile`
-- [ ] Update `requirements.txt`
-- [ ] Push changes to git
-- [ ] Trigger manual deploy from Render dashboard
-- [ ] Monitor deployment logs
-- [ ] Test API endpoints
+### Files
 
----
+- [ ] `app.py` - Streamlit application
+- [ ] `requirements.txt` - Dependencies
+- [ ] `README.md` - Documentation
+- [ ] `Dockerfile` - Container config (optional)
 
-## Fly.io Deployment
+### Verification
 
-### Daemon Service
-- [ ] Update `deployments/fly/daemon/requirements.txt`
-- [ ] Push changes to git
-- [ ] Deploy: `fly deploy`
-- [ ] Monitor logs: `fly logs`
-- [ ] Verify service health
+- [ ] Space deployed successfully
+- [ ] Streamlit UI loads
+- [ ] Can enter backend URL in sidebar
+- [ ] "Test Connection" button works
+- [ ] Shows "✅ Connected" message
+- [ ] Chat interface functional
+- [ ] Memory search working
+- [ ] Tools browser showing tools
 
----
+## Post-Deployment
 
-## Post-Deployment Verification
+### Monitoring
 
-### API Health Checks
-- [ ] GET `/health` returns 200
-- [ ] GET `/status` returns service info
-- [ ] All LLM provider endpoints respond
-- [ ] Database connections stable
-- [ ] Redis connections stable
+- [ ] Set up error tracking (Sentry)
+- [ ] Monitor API response times
+- [ ] Check memory usage daily
+- [ ] Review logs for errors
+- [ ] Monitor LLM provider status
 
-### Performance Monitoring
-- [ ] Monitor CPU usage (should be stable)
-- [ ] Monitor memory usage (should not grow unbounded)
-- [ ] Monitor response times (should be <2s for most endpoints)
-- [ ] Monitor error rates (should be <1%)
+### Security
 
-### Integration Verification
-- [ ] WebSearch returns results
-- [ ] Scraper extracts content correctly
-- [ ] LLM chains execute successfully
-- [ ] Background jobs process correctly
-- [ ] Webhooks trigger properly
+- [ ] Verify CORS settings
+- [ ] Check JWT validation
+- [ ] Verify rate limiting
+- [ ] Test authentication
+- [ ] Review database permissions
 
-### Logging & Monitoring
-- [ ] Check application logs for errors
-- [ ] Verify Sentry integration (if enabled)
-- [ ] Check OpenTelemetry traces
-- [ ] Monitor Prometheus metrics
+### Performance
 
----
+- [ ] Measure API latency
+- [ ] Check cache hit rate
+- [ ] Monitor database queries
+- [ ] Verify LLM fallback chain
+- [ ] Test under load
 
 ## Rollback Plan
 
-If critical issues occur:
+If deployment fails:
 
-### Immediate Rollback
-1. Revert git commits
-2. Rebuild containers with previous versions
-3. Redeploy to all platforms
+1. [ ] Check error logs
+2. [ ] Verify environment variables
+3. [ ] Check database connectivity
+4. [ ] Verify LLM provider keys
+5. [ ] Rollback to previous version
+6. [ ] Fix issues locally
+7. [ ] Re-deploy
 
-### Gradual Rollback
-1. Disable new version in load balancer
-2. Route traffic to previous version
-3. Investigate issues
-4. Fix and redeploy
+## Maintenance
 
-### Database Considerations
-- No schema changes in this update
-- All migrations are backward compatible
-- No data migration needed
+### Weekly
 
----
+- [ ] Check error logs
+- [ ] Monitor memory usage
+- [ ] Verify all providers working
+- [ ] Test critical features
 
-## Known Issues & Workarounds
+### Monthly
 
-### Python 3.13 Compatibility
-- Some packages may need recompilation
-- If build fails, check for C extension compatibility
-- Fallback: Use Python 3.12 if critical issues arise
+- [ ] Update dependencies
+- [ ] Review security advisories
+- [ ] Optimize slow queries
+- [ ] Clean up old data
 
-### LangChain 0.3 Breaking Changes
-- API changes in chain initialization
-- Review chain implementations for compatibility
-- Test all chain types before production
+### Quarterly
 
-### Playwright 1.48 Updates
-- Browser automation may behave differently
-- Test scraping logic thoroughly
-- Monitor for timeout issues
+- [ ] Performance audit
+- [ ] Security audit
+- [ ] Cost analysis
+- [ ] Capacity planning
 
----
+## Troubleshooting
 
-## Monitoring Commands
+### Backend won't start
 
-### Local Testing
 ```bash
-# Install dependencies
-pip install --upgrade -r requirements.txt
+# Check logs
+render.com/dashboard
 
-# Run tests
-pytest -v
-
-# Type checking
-mypy app/
-
-# Linting
-ruff check app/
-
-# Format
-black app/
-
-# Run locally
-uvicorn app.main:app --reload
+# Common issues:
+# - Missing environment variables
+# - Database connection failed
+# - Import errors
+# - Port already in use
 ```
 
-### Render Monitoring
-```bash
-# View logs
-curl https://api.render.com/v1/services/{service-id}/logs
+### Gateway can't connect
 
-# Check deployment status
-curl https://api.render.com/v1/services/{service-id}
+```bash
+# Check backend URL
+curl https://tillu-backend.onrender.com/health
+
+# Check CORS
+# Check firewall rules
+# Check network connectivity
 ```
 
-### Fly.io Monitoring
+### Out of memory
+
 ```bash
-# View logs
-fly logs
-
-# Check status
-fly status
-
-# SSH into instance
-fly ssh console
+# Check memory usage
+# Remove heavy dependencies
+# Upgrade to paid tier
+# Optimize queries
 ```
 
-### HF Spaces Monitoring
-- Check Space settings → Logs
-- Monitor build progress
-- Check runtime logs
+### Slow responses
 
----
+```bash
+# Check LLM provider status
+# Check database performance
+# Check Redis cache
+# Monitor network latency
+```
 
 ## Success Criteria
 
-✅ All services deploy successfully
-✅ All health checks pass
-✅ API response times <2s
-✅ Error rate <1%
-✅ No memory leaks detected
-✅ All integrations working
-✅ Logs show no critical errors
-✅ Performance metrics stable
+- ✅ Backend API responding on port 8000
+- ✅ Gateway UI accessible on HuggingFace Spaces
+- ✅ Chat interface working
+- ✅ Memory storage working
+- ✅ Tool execution working
+- ✅ Memory usage < 512MB
+- ✅ Response time < 5 seconds
+- ✅ No errors in logs
+- ✅ All LLM providers available
+- ✅ Database connected
+- ✅ Redis connected
+- ✅ JWT authentication working
+- ✅ Rate limiting working
+- ✅ CORS configured
+- ✅ Monitoring active
 
----
+## Deployment Complete! 🎉
 
-## Support & Escalation
-
-### If Issues Occur
-1. Check logs first
-2. Verify all dependencies installed
-3. Test individual components
-4. Check API provider status
-5. Review recent changes
-6. Escalate to team if unresolved
-
-### Contact
-- Team Slack: #tillu-backend
-- On-call: Check rotation schedule
-- Emergency: Page on-call engineer
-
----
-
-**Last Updated**: May 10, 2026
-**Status**: Ready for deployment
-**Estimated Deployment Time**: 30-45 minutes (all platforms)
+Once all items are checked, TILLU is ready for production use.
