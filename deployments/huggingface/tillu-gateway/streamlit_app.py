@@ -16,20 +16,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
-st.markdown("""
-<style>
-    .main {
-        padding: 2rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "api_url" not in st.session_state:
     st.session_state.api_url = os.getenv("TILLU_API_URL", "http://localhost:8000")
+if "current_tab" not in st.session_state:
+    st.session_state.current_tab = "Chat"
 
 # Sidebar
 with st.sidebar:
@@ -73,19 +66,33 @@ with st.sidebar:
 # Main content
 st.title("🧠 TILLU - Personal AI Backend")
 
-# Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["💬 Chat", "📊 Memory", "🔧 Tools", "📈 Status"])
+# Navigation tabs
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    if st.button("💬 Chat", use_container_width=True):
+        st.session_state.current_tab = "Chat"
+with col2:
+    if st.button("📊 Memory", use_container_width=True):
+        st.session_state.current_tab = "Memory"
+with col3:
+    if st.button("🔧 Tools", use_container_width=True):
+        st.session_state.current_tab = "Tools"
+with col4:
+    if st.button("📈 Status", use_container_width=True):
+        st.session_state.current_tab = "Status"
 
-# Tab 1: Chat
-with tab1:
-    st.subheader("Conversational AI")
+st.divider()
+
+# Chat Tab
+if st.session_state.current_tab == "Chat":
+    st.subheader("💬 Conversational AI")
     
     # Chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
     
-    # Chat input
+    # Chat input (MUST be outside of tabs/columns)
     user_input = st.chat_input("Ask TILLU something...")
     
     if user_input:
@@ -114,9 +121,9 @@ with tab1:
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-# Tab 2: Memory
-with tab2:
-    st.subheader("Semantic Memory")
+# Memory Tab
+elif st.session_state.current_tab == "Memory":
+    st.subheader("📊 Semantic Memory")
     
     col1, col2 = st.columns(2)
     
@@ -170,9 +177,9 @@ with tab2:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
-# Tab 3: Tools
-with tab3:
-    st.subheader("Available Tools")
+# Tools Tab
+elif st.session_state.current_tab == "Tools":
+    st.subheader("🔧 Available Tools")
     
     try:
         response = httpx.get(
@@ -183,22 +190,25 @@ with tab3:
         if response.status_code == 200:
             tools = response.json().get("tools", [])
             
-            for tool in tools:
-                with st.expander(f"🔧 {tool.get('name', 'Tool')}"):
-                    st.markdown(f"**Description:** {tool.get('description', 'N/A')}")
-                    
-                    if tool.get("parameters"):
-                        st.markdown("**Parameters:**")
-                        for param, details in tool.get("parameters", {}).items():
-                            st.markdown(f"- `{param}`: {details.get('description', 'N/A')}")
+            if tools:
+                for tool in tools:
+                    with st.expander(f"🔧 {tool.get('name', 'Tool')}"):
+                        st.markdown(f"**Description:** {tool.get('description', 'N/A')}")
+                        
+                        if tool.get("parameters"):
+                            st.markdown("**Parameters:**")
+                            for param, details in tool.get("parameters", {}).items():
+                                st.markdown(f"- `{param}`: {details.get('description', 'N/A')}")
+            else:
+                st.info("No tools available")
         else:
             st.error(f"Error: {response.status_code}")
     except Exception as e:
         st.error(f"Error: {str(e)}")
 
-# Tab 4: Status
-with tab4:
-    st.subheader("System Status")
+# Status Tab
+elif st.session_state.current_tab == "Status":
+    st.subheader("📈 System Status")
     
     col1, col2, col3 = st.columns(3)
     
