@@ -1,4 +1,16 @@
-# TILLU Gateway - HuggingFace Spaces
+---
+title: TILLU Gateway
+emoji: 🧠
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: 1.28.0
+app_file: streamlit_app.py
+pinned: false
+license: apache-2.0
+---
+
+# TILLU Gateway - Personal AI Backend
 
 Streamlit-based web interface for TILLU backend, deployed on HuggingFace Spaces.
 
@@ -9,33 +21,14 @@ Streamlit-based web interface for TILLU backend, deployed on HuggingFace Spaces.
 - 🔧 **Tool Browser** - Explore available tools
 - 📊 **System Status** - Monitor API health
 
-## Deployment
-
-### Option 1: Deploy to HuggingFace Spaces
-
-1. Create a new Space on HuggingFace
-2. Select "Streamlit" as the SDK
-3. Upload this directory
-4. Set environment variable: `TILLU_API_URL=<your-tillu-backend-url>`
-
-### Option 2: Run Locally
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Then set the API URL in the sidebar to point to your TILLU backend.
-
 ## Configuration
 
-Set these environment variables:
-
-- `TILLU_API_URL` - URL of TILLU backend API (default: http://localhost:8000)
+Set environment variable in Space settings:
+- \TILLU_API_URL\ - URL of TILLU backend (default: http://localhost:8000)
 
 ## Architecture
 
-```
+\\\
 HuggingFace Spaces (Streamlit UI)
          ↓
     httpx client
@@ -43,17 +36,9 @@ HuggingFace Spaces (Streamlit UI)
 TILLU Backend API (FastAPI)
          ↓
 Supabase + Redis + LLM Providers
-```
+\\\
 
-## Memory Usage
+## Links
 
-- **Streamlit**: ~50MB
-- **httpx**: ~5MB
-- **Total**: ~100MB (well under HF free tier limit)
-
-## Notes
-
-- No heavy dependencies (no Playwright, CrewAI, Celery)
-- Lightweight and fast
-- Suitable for free tier deployment
-- Requires TILLU backend to be running
+- [GitHub](https://github.com/Heoster/tillu)
+- [Backend](https://tillu-backend.onrender.com)
