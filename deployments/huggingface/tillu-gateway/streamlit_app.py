@@ -20,7 +20,7 @@ st.set_page_config(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "api_url" not in st.session_state:
-    st.session_state.api_url = os.getenv("TILLU_API_URL", "")
+    st.session_state.api_url = os.getenv("TILLU_API_URL", "https://tillu-ai-tillu-backend.hf.space")
 if "current_tab" not in st.session_state:
     st.session_state.current_tab = "Chat"
 if "api_connected" not in st.session_state:
