@@ -20,9 +20,11 @@ st.set_page_config(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "api_url" not in st.session_state:
-    st.session_state.api_url = os.getenv("TILLU_API_URL", "http://localhost:8000")
+    st.session_state.api_url = os.getenv("TILLU_API_URL", "")
 if "current_tab" not in st.session_state:
     st.session_state.current_tab = "Chat"
+if "api_connected" not in st.session_state:
+    st.session_state.api_connected = False
 
 # Sidebar
 with st.sidebar:
@@ -30,23 +32,39 @@ with st.sidebar:
     
     # API Configuration
     st.subheader("API Configuration")
+    
+    if st.session_state.api_url:
+        st.info(f"✅ API URL configured: {st.session_state.api_url}")
+    else:
+        st.warning("⚠️ No API URL configured")
+    
     api_url = st.text_input(
-        "API URL",
+        "Backend API URL",
         value=st.session_state.api_url,
-        help="TILLU backend API endpoint"
+        placeholder="https://your-backend.com",
+        help="TILLU backend API endpoint (e.g., https://tillu-backend.onrender.com)"
     )
-    st.session_state.api_url = api_url
+    
+    if api_url != st.session_state.api_url:
+        st.session_state.api_url = api_url
+        st.session_state.api_connected = False
     
     # Test connection
-    if st.button("🔗 Test Connection"):
-        try:
-            resp = httpx.get(f"{api_url}/health", timeout=5.0)
-            if resp.status_code == 200:
-                st.success("✅ Connected to TILLU backend")
-            else:
-                st.error(f"❌ API returned status {resp.status_code}")
-        except Exception as e:
-            st.error(f"❌ Connection failed: {str(e)}")
+    if st.button("🔗 Test Connection", use_container_width=True):
+        if not st.session_state.api_url:
+            st.error("❌ Please enter an API URL first")
+        else:
+            try:
+                resp = httpx.get(f"{st.session_state.api_url}/health", timeout=5.0)
+                if resp.status_code == 200:
+                    st.session_state.api_connected = True
+                    st.success("✅ Connected to TILLU backend")
+                else:
+                    st.session_state.api_connected = False
+                    st.error(f"❌ API returned status {resp.status_code}")
+            except Exception as e:
+                st.session_state.api_connected = False
+                st.error(f"❌ Connection failed: {str(e)}")
     
     st.divider()
     
@@ -61,10 +79,35 @@ with st.sidebar:
     - 🎯 Proactive intelligence
     
     [GitHub](https://github.com/Heoster/tillu)
+    [Docs](https://github.com/Heoster/tillu#readme)
     """)
 
 # Main content
 st.title("🧠 TILLU - Personal AI Backend")
+
+# Show setup instructions if no API configured
+if not st.session_state.api_url:
+    st.warning("### ⚠️ Setup Required")
+    st.markdown("""
+    To use TILLU Gateway, you need to:
+    
+    1. **Deploy the backend** (if not already deployed):
+       - Deploy to Render, Railway, or your preferred platform
+       - Get the backend URL
+    
+    2. **Configure the API URL**:
+       - Enter your backend URL in the sidebar
+       - Click "Test Connection" to verify
+    
+    3. **Start using TILLU**:
+       - Chat with your AI
+       - Store and search memories
+       - Browse available tools
+       - Monitor system status
+    
+    **Example backend URL**: `https://tillu-backend.onrender.com`
+    """)
+    st.stop()
 
 # Navigation tabs
 col1, col2, col3, col4 = st.columns(4)
@@ -87,158 +130,170 @@ st.divider()
 if st.session_state.current_tab == "Chat":
     st.subheader("💬 Conversational AI")
     
-    # Chat history
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-    
-    # Chat input (MUST be outside of tabs/columns)
-    user_input = st.chat_input("Ask TILLU something...")
-    
-    if user_input:
-        # Add user message
-        st.session_state.messages.append({"role": "user", "content": user_input})
+    if not st.session_state.api_connected:
+        st.error("❌ Not connected to backend. Please configure API URL in sidebar.")
+    else:
+        # Chat history
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
         
-        # Get response from API
-        try:
-            with st.spinner("Thinking..."):
-                response = httpx.post(
-                    f"{st.session_state.api_url}/api/gateway/chat",
-                    json={"message": user_input},
-                    timeout=30.0
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    assistant_response = data.get("response", "No response received")
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": assistant_response
-                    })
-                    st.rerun()
-                else:
-                    st.error(f"API error: {response.status_code}")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        # Chat input (MUST be outside of tabs/columns)
+        user_input = st.chat_input("Ask TILLU something...")
+        
+        if user_input:
+            # Add user message
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            
+            # Get response from API
+            try:
+                with st.spinner("Thinking..."):
+                    response = httpx.post(
+                        f"{st.session_state.api_url}/api/gateway/chat",
+                        json={"message": user_input},
+                        timeout=30.0
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        assistant_response = data.get("response", "No response received")
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": assistant_response
+                        })
+                        st.rerun()
+                    else:
+                        st.error(f"API error: {response.status_code}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 # Memory Tab
 elif st.session_state.current_tab == "Memory":
     st.subheader("📊 Semantic Memory")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### 📝 Store Memory")
-        memory_text = st.text_area("Memory content", height=150)
-        memory_type = st.selectbox("Type", ["note", "event", "insight", "learning"])
+    if not st.session_state.api_connected:
+        st.error("❌ Not connected to backend. Please configure API URL in sidebar.")
+    else:
+        col1, col2 = st.columns(2)
         
-        if st.button("💾 Save Memory"):
-            try:
-                response = httpx.post(
-                    f"{st.session_state.api_url}/api/memory/store",
-                    json={
-                        "content": memory_text,
-                        "type": memory_type,
-                        "timestamp": datetime.now().isoformat()
-                    },
-                    timeout=10.0
-                )
-                
-                if response.status_code == 200:
-                    st.success("✅ Memory saved")
-                else:
-                    st.error(f"Error: {response.status_code}")
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-    
-    with col2:
-        st.markdown("### 🔍 Search Memory")
-        search_query = st.text_input("Search query")
-        
-        if search_query:
-            try:
-                response = httpx.get(
-                    f"{st.session_state.api_url}/api/memory/search",
-                    params={"query": search_query, "limit": 5},
-                    timeout=10.0
-                )
-                
-                if response.status_code == 200:
-                    results = response.json().get("results", [])
-                    if results:
-                        for result in results:
-                            with st.expander(f"📌 {result.get('title', 'Memory')}"):
-                                st.markdown(result.get("content", ""))
-                                st.caption(f"Score: {result.get('score', 0):.2f}")
+        with col1:
+            st.markdown("### 📝 Store Memory")
+            memory_text = st.text_area("Memory content", height=150)
+            memory_type = st.selectbox("Type", ["note", "event", "insight", "learning"])
+            
+            if st.button("💾 Save Memory"):
+                try:
+                    response = httpx.post(
+                        f"{st.session_state.api_url}/api/memory/store",
+                        json={
+                            "content": memory_text,
+                            "type": memory_type,
+                            "timestamp": datetime.now().isoformat()
+                        },
+                        timeout=10.0
+                    )
+                    
+                    if response.status_code == 200:
+                        st.success("✅ Memory saved")
                     else:
-                        st.info("No memories found")
-                else:
-                    st.error(f"Error: {response.status_code}")
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+                        st.error(f"Error: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+        
+        with col2:
+            st.markdown("### 🔍 Search Memory")
+            search_query = st.text_input("Search query")
+            
+            if search_query:
+                try:
+                    response = httpx.get(
+                        f"{st.session_state.api_url}/api/memory/search",
+                        params={"query": search_query, "limit": 5},
+                        timeout=10.0
+                    )
+                    
+                    if response.status_code == 200:
+                        results = response.json().get("results", [])
+                        if results:
+                            for result in results:
+                                with st.expander(f"📌 {result.get('title', 'Memory')}"):
+                                    st.markdown(result.get("content", ""))
+                                    st.caption(f"Score: {result.get('score', 0):.2f}")
+                        else:
+                            st.info("No memories found")
+                    else:
+                        st.error(f"Error: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
 
 # Tools Tab
 elif st.session_state.current_tab == "Tools":
     st.subheader("🔧 Available Tools")
     
-    try:
-        response = httpx.get(
-            f"{st.session_state.api_url}/api/gateway/tools",
-            timeout=10.0
-        )
-        
-        if response.status_code == 200:
-            tools = response.json().get("tools", [])
+    if not st.session_state.api_connected:
+        st.error("❌ Not connected to backend. Please configure API URL in sidebar.")
+    else:
+        try:
+            response = httpx.get(
+                f"{st.session_state.api_url}/api/gateway/tools",
+                timeout=10.0
+            )
             
-            if tools:
-                for tool in tools:
-                    with st.expander(f"🔧 {tool.get('name', 'Tool')}"):
-                        st.markdown(f"**Description:** {tool.get('description', 'N/A')}")
-                        
-                        if tool.get("parameters"):
-                            st.markdown("**Parameters:**")
-                            for param, details in tool.get("parameters", {}).items():
-                                st.markdown(f"- `{param}`: {details.get('description', 'N/A')}")
+            if response.status_code == 200:
+                tools = response.json().get("tools", [])
+                
+                if tools:
+                    for tool in tools:
+                        with st.expander(f"🔧 {tool.get('name', 'Tool')}"):
+                            st.markdown(f"**Description:** {tool.get('description', 'N/A')}")
+                            
+                            if tool.get("parameters"):
+                                st.markdown("**Parameters:**")
+                                for param, details in tool.get("parameters", {}).items():
+                                    st.markdown(f"- `{param}`: {details.get('description', 'N/A')}")
+                else:
+                    st.info("No tools available")
             else:
-                st.info("No tools available")
-        else:
-            st.error(f"Error: {response.status_code}")
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+                st.error(f"Error: {response.status_code}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
 
 # Status Tab
 elif st.session_state.current_tab == "Status":
     st.subheader("📈 System Status")
     
-    col1, col2, col3 = st.columns(3)
-    
-    try:
-        response = httpx.get(
-            f"{st.session_state.api_url}/health",
-            timeout=5.0
-        )
+    if not st.session_state.api_connected:
+        st.error("❌ Not connected to backend. Please configure API URL in sidebar.")
+    else:
+        col1, col2, col3 = st.columns(3)
         
-        if response.status_code == 200:
-            health = response.json()
+        try:
+            response = httpx.get(
+                f"{st.session_state.api_url}/health",
+                timeout=5.0
+            )
             
-            with col1:
-                st.metric("API Status", "🟢 Online")
-            
-            with col2:
-                st.metric("Version", health.get("version", "N/A"))
-            
-            with col3:
-                st.metric("Uptime", "Running")
-            
-            st.divider()
-            
-            # Detailed status
-            st.markdown("### 📊 Detailed Status")
-            st.json(health)
-        else:
-            st.error("❌ API is offline")
-    except Exception as e:
-        st.error(f"❌ Cannot reach API: {str(e)}")
+            if response.status_code == 200:
+                health = response.json()
+                
+                with col1:
+                    st.metric("API Status", "🟢 Online")
+                
+                with col2:
+                    st.metric("Version", health.get("version", "N/A"))
+                
+                with col3:
+                    st.metric("Uptime", "Running")
+                
+                st.divider()
+                
+                # Detailed status
+                st.markdown("### 📊 Detailed Status")
+                st.json(health)
+            else:
+                st.error("❌ API is offline")
+        except Exception as e:
+            st.error(f"❌ Cannot reach API: {str(e)}")
 
 # Footer
 st.divider()
