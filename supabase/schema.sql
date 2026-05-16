@@ -57,36 +57,36 @@ CREATE TABLE IF NOT EXISTS interactions (
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
     session_id UUID,
     interaction_type TEXT NOT NULL, -- text, audio, image, document, location
-    
+
     -- Input
     input_text TEXT,
     input_metadata JSONB DEFAULT '{}',
-    
+
     -- Processing metadata
     intent_class TEXT,
     emotion_scores JSONB DEFAULT '{}',
     stress_score FLOAT DEFAULT 0,
-    
+
     -- Chain execution
     chain_used TEXT NOT NULL,
     model_used TEXT,
     latency_ms INTEGER,
     tokens_used INTEGER,
-    
+
     -- Response
     response_text TEXT,
     response_metadata JSONB DEFAULT '{}',
     personality_mode TEXT,
-    
+
     -- Quality scores (from self-critique)
     quality_accuracy_score FLOAT CHECK (quality_accuracy_score >= 0 AND quality_accuracy_score <= 1),
     quality_helpfulness_score FLOAT CHECK (quality_helpfulness_score >= 0 AND quality_helpfulness_score <= 1),
     quality_personality_fit_score FLOAT CHECK (quality_personality_fit_score >= 0 AND quality_personality_fit_score <= 1),
-    
+
     -- Sources and context
     sources_used JSONB DEFAULT '[]',
     context_tiers JSONB DEFAULT '{}',
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -94,28 +94,28 @@ CREATE TABLE IF NOT EXISTS interactions (
 CREATE TABLE IF NOT EXISTS knowledge_base (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Content
     content TEXT NOT NULL,
     content_type TEXT NOT NULL, -- fact, preference, insight, pattern
     category TEXT, -- general, health, finance, work, relationships, etc.
-    
+
     -- Source tracking
     source_interaction_id UUID REFERENCES interactions(id),
     source_type TEXT, -- interaction, research, external
     source_metadata JSONB DEFAULT '{}',
-    
+
     -- Embedding for semantic search
     embedding VECTOR(768),
-    
+
     -- Usage tracking
     access_count INTEGER DEFAULT 0,
     last_accessed TIMESTAMPTZ,
-    
+
     -- Quality
     confidence_score FLOAT DEFAULT 0.8 CHECK (confidence_score >= 0 AND confidence_score <= 1),
     quality_score FLOAT DEFAULT 0.8 CHECK (quality_score >= 0 AND quality_score <= 1),
-    
+
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
 CREATE TABLE IF NOT EXISTS news_articles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Content
     title TEXT NOT NULL,
     summary TEXT,
@@ -134,24 +134,24 @@ CREATE TABLE IF NOT EXISTS news_articles (
     url TEXT,
     source_name TEXT,
     source_type TEXT, -- rss, api, scraped
-    
+
     -- Processing
     original_text TEXT,
     bart_summary TEXT,
     entities JSONB DEFAULT '[]', -- NER extracted
     topics JSONB DEFAULT '[]', -- Zero-shot classified
     embedding VECTOR(768),
-    
+
     -- Scoring
     urgency_score INTEGER CHECK (urgency_score >= 1 AND urgency_score <= 10),
     relevance_score FLOAT CHECK (relevance_score >= 0 AND relevance_score <= 1),
     interest_match JSONB DEFAULT '{}',
-    
+
     -- Status
     processed BOOLEAN DEFAULT FALSE,
     delivered BOOLEAN DEFAULT FALSE,
     delivery_method TEXT, -- urgent, normal, digest
-    
+
     -- Timestamps
     published_at TIMESTAMPTZ,
     fetched_at TIMESTAMPTZ DEFAULT NOW(),
@@ -163,12 +163,12 @@ CREATE TABLE IF NOT EXISTS news_articles (
 CREATE TABLE IF NOT EXISTS event_queue (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Event metadata
     event_type TEXT NOT NULL, -- breaking_news, financial_alert, pattern_alert, etc.
     urgency INTEGER NOT NULL CHECK (urgency >= 1 AND urgency <= 10),
     source_agent TEXT NOT NULL, -- daemon, engine, gateway, research_agent
-    
+
     -- Content
     title TEXT NOT NULL,
     body TEXT,
@@ -176,24 +176,24 @@ CREATE TABLE IF NOT EXISTS event_queue (
     structured_data JSONB DEFAULT '{}',
     sources JSONB DEFAULT '[]',
     actions JSONB DEFAULT '["acknowledge", "dismiss"]',
-    
+
     -- Personality
     personality_mode TEXT,
-    
+
     -- Delivery
     deliver_after TIMESTAMPTZ DEFAULT NOW(),
     expires_at TIMESTAMPTZ,
     require_ack BOOLEAN DEFAULT FALSE,
     target_client_id UUID,
-    
+
     -- Status
     status TEXT DEFAULT 'pending', -- pending, delivered, acknowledged, expired
     delivered_at TIMESTAMPTZ,
     acknowledged_at TIMESTAMPTZ,
-    
+
     -- Deduplication
     dedup_key TEXT,
-    
+
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -201,29 +201,29 @@ CREATE TABLE IF NOT EXISTS event_queue (
 CREATE TABLE IF NOT EXISTS research_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Request
     query TEXT NOT NULL,
     research_plan JSONB DEFAULT '{}',
-    
+
     -- Execution
     search_results JSONB DEFAULT '[]',
     scraped_content JSONB DEFAULT '[]',
     synthesis TEXT,
     critique JSONB DEFAULT '{}',
     iteration_count INTEGER DEFAULT 0,
-    
+
     -- Output
     full_synthesis JSONB DEFAULT '{}',
     executive_summary TEXT,
     citations JSONB DEFAULT '[]',
-    
+
     -- Embedding for semantic search
     embedding VECTOR(768),
-    
+
     -- Status
     status TEXT DEFAULT 'pending', -- pending, searching, synthesizing, complete, failed
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     completed_at TIMESTAMPTZ
 );
@@ -232,40 +232,40 @@ CREATE TABLE IF NOT EXISTS research_sessions (
 CREATE TABLE IF NOT EXISTS tasks_goals (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Basic info
     title TEXT NOT NULL,
     description TEXT,
     type TEXT NOT NULL, -- task, goal, habit, project
     category TEXT,
-    
+
     -- Scheduling
     due_date TIMESTAMPTZ,
     start_date TIMESTAMPTZ,
     recurrence TEXT, -- daily, weekly, monthly, none
-    
+
     -- Status
     status TEXT DEFAULT 'active', -- active, completed, archived, cancelled
     priority INTEGER DEFAULT 3 CHECK (priority >= 1 AND priority <= 5),
-    
+
     -- Progress
     progress_percent INTEGER DEFAULT 0,
     completed_at TIMESTAMPTZ,
-    
+
     -- AI-generated metrics
     probability_of_completion FLOAT DEFAULT 0.5 CHECK (probability_of_completion >= 0 AND probability_of_completion <= 1),
     estimated_effort_hours INTEGER,
     days_at_current_rate INTEGER,
-    
+
     -- Nudging
     last_nudge_at TIMESTAMPTZ,
     nudge_count INTEGER DEFAULT 0,
     nudge_next_at TIMESTAMPTZ,
-    
+
     -- Context
     related_knowledge_ids JSONB DEFAULT '[]',
     tags JSONB DEFAULT '[]',
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -274,7 +274,7 @@ CREATE TABLE IF NOT EXISTS tasks_goals (
 CREATE TABLE IF NOT EXISTS emotion_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Emotion detection
     joy FLOAT DEFAULT 0,
     sadness FLOAT DEFAULT 0,
@@ -283,16 +283,16 @@ CREATE TABLE IF NOT EXISTS emotion_log (
     surprise FLOAT DEFAULT 0,
     disgust FLOAT DEFAULT 0,
     neutral FLOAT DEFAULT 0,
-    
+
     -- Aggregated
     dominant_emotion TEXT,
     emotion_intensity FLOAT,
     stress_level TEXT, -- high, medium, low
-    
+
     -- Context
     interaction_id UUID REFERENCES interactions(id),
     context TEXT,
-    
+
     recorded_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -300,35 +300,35 @@ CREATE TABLE IF NOT EXISTS emotion_log (
 CREATE TABLE IF NOT EXISTS financial_tracking (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Asset info
     asset_type TEXT NOT NULL, -- crypto, stock, forex, commodity
     symbol TEXT NOT NULL,
     name TEXT,
-    
+
     -- Tracking
     current_price FLOAT,
     price_currency TEXT DEFAULT 'USD',
-    
+
     -- History
     price_history JSONB DEFAULT '[]', -- [{timestamp, price, change_pct}]
-    
+
     -- Alerts
     alert_threshold_pct FLOAT DEFAULT 2.0,
     last_alert_at TIMESTAMPTZ,
     alert_count INTEGER DEFAULT 0,
-    
+
     -- Portfolio
     quantity_held FLOAT DEFAULT 0,
     cost_basis FLOAT,
-    
+
     -- Metadata
     source TEXT DEFAULT 'coingecko', -- coingecko, yahoo, alpha_vantage
     metadata JSONB DEFAULT '{}',
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    
+
     UNIQUE(user_id, symbol, asset_type)
 );
 
@@ -336,33 +336,33 @@ CREATE TABLE IF NOT EXISTS financial_tracking (
 CREATE TABLE IF NOT EXISTS web_monitors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Target
     url TEXT NOT NULL,
     name TEXT,
     description TEXT,
-    
+
     -- Monitoring config
     check_interval_minutes INTEGER DEFAULT 30,
     css_selector TEXT, -- Element to monitor
     content_type TEXT DEFAULT 'text', -- text, html, screenshot
-    
+
     -- State
     last_content TEXT,
     last_content_hash TEXT,
     last_checked_at TIMESTAMPTZ,
     last_changed_at TIMESTAMPTZ,
     change_count INTEGER DEFAULT 0,
-    
+
     -- Alerting
     alert_threshold FLOAT DEFAULT 0.1, -- Content change threshold
     notify_on_change BOOLEAN DEFAULT TRUE,
-    
+
     -- Status
     is_active BOOLEAN DEFAULT TRUE,
     last_error TEXT,
     consecutive_errors INTEGER DEFAULT 0,
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -371,34 +371,34 @@ CREATE TABLE IF NOT EXISTS web_monitors (
 CREATE TABLE IF NOT EXISTS people_knowledge (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Person info
     name TEXT NOT NULL,
     relationship_type TEXT, -- family, friend, colleague, etc.
     contact_info JSONB DEFAULT '{}',
-    
+
     -- Context
     notes TEXT,
     preferences JSONB DEFAULT '{}',
     conversation_history JSONB DEFAULT '[]',
-    
+
     -- Relationship tracking
     last_interaction_at TIMESTAMPTZ,
     interaction_frequency TEXT, -- daily, weekly, monthly, rare
     relationship_health_score FLOAT DEFAULT 0.8,
-    
+
     -- Important dates
     birthday DATE,
     anniversary DATE,
     other_dates JSONB DEFAULT '[]',
-    
+
     -- Embedding
     embedding VECTOR(768),
-    
+
     -- Maintenance
     needs_attention BOOLEAN DEFAULT FALSE,
     suggested_actions JSONB DEFAULT '[]',
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -406,10 +406,10 @@ CREATE TABLE IF NOT EXISTS people_knowledge (
 -- System Analytics: Per-hour operational metrics
 CREATE TABLE IF NOT EXISTS system_analytics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
+
     -- Time bucket
     hour_bucket TIMESTAMPTZ NOT NULL,
-    
+
     -- API usage by provider
     groq_requests INTEGER DEFAULT 0,
     groq_tokens INTEGER DEFAULT 0,
@@ -417,38 +417,38 @@ CREATE TABLE IF NOT EXISTS system_analytics (
     openrouter_requests INTEGER DEFAULT 0,
     gemini_requests INTEGER DEFAULT 0,
     cohere_requests INTEGER DEFAULT 0,
-    
+
     -- HF API usage
     hf_embedding_requests INTEGER DEFAULT 0,
     hf_emotion_requests INTEGER DEFAULT 0,
     hf_intent_requests INTEGER DEFAULT 0,
     hf_ner_requests INTEGER DEFAULT 0,
     hf_summarizer_requests INTEGER DEFAULT 0,
-    
+
     -- External API usage
     newsapi_requests INTEGER DEFAULT 0,
     brave_requests INTEGER DEFAULT 0,
     coingecko_requests INTEGER DEFAULT 0,
-    
+
     -- System metrics
     total_interactions INTEGER DEFAULT 0,
     avg_latency_ms FLOAT,
     error_count INTEGER DEFAULT 0,
     error_rate FLOAT,
-    
+
     -- Storage
     supabase_storage_mb FLOAT,
     redis_memory_mb FLOAT,
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    
+
     UNIQUE(hour_bucket)
 );
 
 -- Daemon Monitor State: Daemon loop health tracking
 CREATE TABLE IF NOT EXISTS monitor_state (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
+
     loop_name TEXT NOT NULL UNIQUE,
     is_running BOOLEAN DEFAULT TRUE,
     last_execution_at TIMESTAMPTZ,
@@ -457,40 +457,83 @@ CREATE TABLE IF NOT EXISTS monitor_state (
     error_count INTEGER DEFAULT 0,
     last_error TEXT,
     avg_execution_time_ms FLOAT,
-    
+
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Archived Index: Pointers to GitHub-archived old data
 CREATE TABLE IF NOT EXISTS archived_index (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
+
     archive_type TEXT NOT NULL, -- interactions, news, events
     date_range_start TIMESTAMPTZ NOT NULL,
     date_range_end TIMESTAMPTZ NOT NULL,
-    
+
     -- Archive location
     github_repo TEXT,
     github_path TEXT,
     github_commit_hash TEXT,
-    
+
     -- Metadata
     record_count INTEGER,
     file_size_bytes INTEGER,
     compressed BOOLEAN DEFAULT TRUE,
-    
+
     archived_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Notification Subscriptions: Push tokens/subscriptions for mobile, web, desktop
+CREATE TABLE IF NOT EXISTS notification_subscriptions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES user_profile(user_id),
+
+    -- Platform details
+    platform TEXT NOT NULL, -- expo, web_push, desktop, tauri
+    client_id UUID,
+    token TEXT,
+    subscription JSONB DEFAULT '{}',
+    device_name TEXT,
+
+    -- State
+    enabled BOOLEAN DEFAULT TRUE,
+    last_seen_at TIMESTAMPTZ DEFAULT NOW(),
+    last_sent_at TIMESTAMPTZ,
+    failure_count INTEGER DEFAULT 0,
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    UNIQUE(user_id, platform, token)
+);
+
+-- Notification Settings: User-controlled proactive delivery preferences
+CREATE TABLE IF NOT EXISTS notification_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE REFERENCES user_profile(user_id),
+
+    morning_briefing_enabled BOOLEAN DEFAULT TRUE,
+    morning_briefing_time TIME DEFAULT '07:00:00',
+    interesting_finds_enabled BOOLEAN DEFAULT TRUE,
+    weekly_evolution_enabled BOOLEAN DEFAULT TRUE,
+    proactive_messages_enabled BOOLEAN DEFAULT TRUE,
+    quiet_hours_enabled BOOLEAN DEFAULT TRUE,
+    quiet_hours_start TIME DEFAULT '22:00:00',
+    quiet_hours_end TIME DEFAULT '08:00:00',
+    channels JSONB DEFAULT '{"expo": true, "web_push": true, "desktop": true}',
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Client Registry: Registered clients with capabilities
 CREATE TABLE IF NOT EXISTS client_registry (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES user_profile(user_id),
-    
+
     -- Client info
     client_name TEXT NOT NULL,
     client_type TEXT NOT NULL, -- whatsapp, web, mobile, api
-    
+
     -- Capabilities
     supports_text BOOLEAN DEFAULT TRUE,
     supports_audio BOOLEAN DEFAULT FALSE,
@@ -499,18 +542,18 @@ CREATE TABLE IF NOT EXISTS client_registry (
     supports_location BOOLEAN DEFAULT FALSE,
     supports_sse BOOLEAN DEFAULT FALSE,
     supports_websocket BOOLEAN DEFAULT FALSE,
-    
+
     -- Preferences
     preferences JSONB DEFAULT '{}',
-    
+
     -- Connection
     is_connected BOOLEAN DEFAULT FALSE,
     last_connected_at TIMESTAMPTZ,
     connection_metadata JSONB DEFAULT '{}',
-    
+
     -- Auth
     api_key_hash TEXT,
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -528,7 +571,7 @@ CREATE INDEX IF NOT EXISTS idx_interactions_intent_class ON interactions(intent_
 -- Knowledge Base (with vector similarity)
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_user_id ON knowledge_base(user_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_category ON knowledge_base(category);
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_embedding ON knowledge_base 
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_embedding ON knowledge_base
     USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- News Articles
@@ -543,6 +586,11 @@ CREATE INDEX IF NOT EXISTS idx_event_queue_user_id ON event_queue(user_id);
 CREATE INDEX IF NOT EXISTS idx_event_queue_status ON event_queue(status);
 CREATE INDEX IF NOT EXISTS idx_event_queue_urgency ON event_queue(urgency);
 CREATE INDEX IF NOT EXISTS idx_event_queue_deliver_after ON event_queue(deliver_after);
+
+-- Notifications
+CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_user_id ON notification_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_platform ON notification_subscriptions(platform);
+CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_enabled ON notification_subscriptions(enabled);
 
 -- Research Sessions
 CREATE INDEX IF NOT EXISTS idx_research_sessions_user_id ON research_sessions(user_id);
@@ -580,25 +628,25 @@ END;
 $$ language 'plpgsql';
 
 -- Apply updated_at triggers
-CREATE TRIGGER update_user_profile_updated_at BEFORE UPDATE ON user_profile
+CREATE OR REPLACE TRIGGER update_user_profile_updated_at BEFORE UPDATE ON user_profile
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_knowledge_base_updated_at BEFORE UPDATE ON knowledge_base
+CREATE OR REPLACE TRIGGER update_knowledge_base_updated_at BEFORE UPDATE ON knowledge_base
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_tasks_goals_updated_at BEFORE UPDATE ON tasks_goals
+CREATE OR REPLACE TRIGGER update_tasks_goals_updated_at BEFORE UPDATE ON tasks_goals
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_financial_tracking_updated_at BEFORE UPDATE ON financial_tracking
+CREATE OR REPLACE TRIGGER update_financial_tracking_updated_at BEFORE UPDATE ON financial_tracking
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_web_monitors_updated_at BEFORE UPDATE ON web_monitors
+CREATE OR REPLACE TRIGGER update_web_monitors_updated_at BEFORE UPDATE ON web_monitors
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_people_knowledge_updated_at BEFORE UPDATE ON people_knowledge
+CREATE OR REPLACE TRIGGER update_people_knowledge_updated_at BEFORE UPDATE ON people_knowledge
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_client_registry_updated_at BEFORE UPDATE ON client_registry
+CREATE OR REPLACE TRIGGER update_client_registry_updated_at BEFORE UPDATE ON client_registry
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Access count increment function
@@ -629,7 +677,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         kb.id,
         kb.content,
         kb.content_type,
@@ -662,7 +710,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         na.id,
         na.title,
         na.summary,
