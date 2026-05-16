@@ -745,53 +745,68 @@ ALTER TABLE people_knowledge ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_registry ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (users can only access their own data)
+DROP POLICY IF EXISTS user_profile_isolation ON user_profile;
 CREATE POLICY user_profile_isolation ON user_profile
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS interactions_isolation ON interactions;
 CREATE POLICY interactions_isolation ON interactions
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS knowledge_base_isolation ON knowledge_base;
 CREATE POLICY knowledge_base_isolation ON knowledge_base
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS news_articles_isolation ON news_articles;
 CREATE POLICY news_articles_isolation ON news_articles
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS event_queue_isolation ON event_queue;
 CREATE POLICY event_queue_isolation ON event_queue
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS research_sessions_isolation ON research_sessions;
 CREATE POLICY research_sessions_isolation ON research_sessions
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS tasks_goals_isolation ON tasks_goals;
 CREATE POLICY tasks_goals_isolation ON tasks_goals
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS emotion_log_isolation ON emotion_log;
 CREATE POLICY emotion_log_isolation ON emotion_log
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS financial_tracking_isolation ON financial_tracking;
 CREATE POLICY financial_tracking_isolation ON financial_tracking
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS web_monitors_isolation ON web_monitors;
 CREATE POLICY web_monitors_isolation ON web_monitors
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS people_knowledge_isolation ON people_knowledge;
 CREATE POLICY people_knowledge_isolation ON people_knowledge
     FOR ALL USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS client_registry_isolation ON client_registry;
 CREATE POLICY client_registry_isolation ON client_registry
     FOR ALL USING (user_id = auth.uid());
 
 -- Service role bypass (for backend processes)
+DROP POLICY IF EXISTS service_role_bypass_user_profile ON user_profile;
 CREATE POLICY service_role_bypass_user_profile ON user_profile
     FOR ALL
     TO service_role
     USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_interactions ON interactions;
 CREATE POLICY service_role_bypass_interactions ON interactions
     FOR ALL
     TO service_role
     USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_knowledge_base ON knowledge_base;
 CREATE POLICY service_role_bypass_knowledge_base ON knowledge_base
     FOR ALL
     TO service_role
@@ -842,7 +857,9 @@ CREATE INDEX IF NOT EXISTS idx_emails_importance ON emails(importance_score);
 CREATE INDEX IF NOT EXISTS idx_emails_received ON emails(received_at);
 
 ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS emails_isolation ON emails;
 CREATE POLICY emails_isolation ON emails FOR ALL USING (user_id = auth.uid());
+DROP POLICY IF EXISTS service_role_bypass_emails ON emails;
 CREATE POLICY service_role_bypass_emails ON emails FOR ALL TO service_role USING (true);
 
 -- ============================================================================
@@ -872,29 +889,38 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Service role bypass for emails and system tables
+DROP POLICY IF EXISTS service_role_bypass_event_queue ON event_queue;
 CREATE POLICY service_role_bypass_event_queue ON event_queue
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_news_articles ON news_articles;
 CREATE POLICY service_role_bypass_news_articles ON news_articles
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_research_sessions ON research_sessions;
 CREATE POLICY service_role_bypass_research_sessions ON research_sessions
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_tasks_goals ON tasks_goals;
 CREATE POLICY service_role_bypass_tasks_goals ON tasks_goals
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_emotion_log ON emotion_log;
 CREATE POLICY service_role_bypass_emotion_log ON emotion_log
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_financial_tracking ON financial_tracking;
 CREATE POLICY service_role_bypass_financial_tracking ON financial_tracking
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_web_monitors ON web_monitors;
 CREATE POLICY service_role_bypass_web_monitors ON web_monitors
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_people_knowledge ON people_knowledge;
 CREATE POLICY service_role_bypass_people_knowledge ON people_knowledge
     FOR ALL TO service_role USING (true);
 
+DROP POLICY IF EXISTS service_role_bypass_client_registry ON client_registry;
 CREATE POLICY service_role_bypass_client_registry ON client_registry
     FOR ALL TO service_role USING (true);
