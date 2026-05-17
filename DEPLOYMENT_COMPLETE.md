@@ -121,7 +121,7 @@ https://dashboard.render.com/services/tillu-backend
 The ReActAgentChain now uses a smart fallback system:
 
 ```
-1. Groq (llama-3.1-70b-versatile) - Primary
+1. Groq (llama-3.3-70b-versatile) - Primary
    ↓ (if not available)
 2. Cerebras (llama-3.3-70b) - Secondary
    ↓ (if not available)

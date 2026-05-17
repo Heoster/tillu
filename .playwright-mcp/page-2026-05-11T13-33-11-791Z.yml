@@ -1,0 +1,9 @@
+- generic [ref=e1]:
+  - banner [ref=e2]
+  - generic [ref=e5]:
+    - alert [ref=e11]:
+      - paragraph [ref=e16]: Please wait...
+    - generic [ref=e18]:
+      - text: Made with
+      - link "Streamlit" [ref=e19] [cursor=pointer]:
+        - /url: //streamlit.io

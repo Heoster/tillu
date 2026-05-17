@@ -101,8 +101,8 @@ TILLU Gateway started successfully
 
 ### Request Routing
 ```
-LLM route: task=quality_chat lang=en → groq/llama-3.1-70b-versatile
-LLM response: groq/llama-3.1-70b-versatile in 750ms
+LLM route: task=quality_chat lang=en → groq/llama-3.3-70b-versatile
+LLM response: groq/llama-3.3-70b-versatile in 750ms
 ```
 
 ### Fallback Chain

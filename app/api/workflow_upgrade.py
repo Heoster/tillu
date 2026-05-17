@@ -21,6 +21,7 @@ from typing import Any
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
 
+from app.config import settings
 from app.utils.logging import get_logger
 
 logger = get_logger("workflow_upgrade")
@@ -33,8 +34,17 @@ N8N_WORKFLOWS_DIR = os.path.join(
 
 
 def _verify(x_cron_secret: str | None) -> None:
-    if CRON_SECRET and x_cron_secret != CRON_SECRET:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    expected = settings.internal_secret or CRON_SECRET
+    if not expected:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="INTERNAL_SECRET is not configured",
+        )
+    if x_cron_secret != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
 
 
 class GenerateRequest(BaseModel):
@@ -49,11 +59,13 @@ class SyncResponse(BaseModel):
 
 # ── List workflows ────────────────────────────────────────────────────────────
 
+
 @router.get("/list")
 async def list_workflows(x_cron_secret: str | None = Header(default=None)):
     """List all workflows currently in n8n."""
     _verify(x_cron_secret)
     from app.services.workflow_manager import workflow_manager
+
     try:
         workflows = await workflow_manager.list_workflows()
         return {
@@ -74,6 +86,7 @@ async def list_workflows(x_cron_secret: str | None = Header(default=None)):
 
 # ── Sync from repo ────────────────────────────────────────────────────────────
 
+
 @router.post("/sync", response_model=SyncResponse)
 async def sync_workflows(x_cron_secret: str | None = Header(default=None)):
     """
@@ -83,6 +96,7 @@ async def sync_workflows(x_cron_secret: str | None = Header(default=None)):
     """
     _verify(x_cron_secret)
     from app.services.workflow_manager import workflow_manager
+
     try:
         results = await workflow_manager.sync_all_from_repo(N8N_WORKFLOWS_DIR)
         ok = [r for r in results if r.get("status") == "ok"]
@@ -94,6 +108,7 @@ async def sync_workflows(x_cron_secret: str | None = Header(default=None)):
 
 
 # ── LLM generate + deploy ─────────────────────────────────────────────────────
+
 
 @router.post("/generate")
 async def generate_workflow(
@@ -110,6 +125,7 @@ async def generate_workflow(
     """
     _verify(x_cron_secret)
     from app.services.workflow_manager import workflow_manager
+
     try:
         result = await workflow_manager.generate_and_deploy(
             instruction=req.instruction,
@@ -117,7 +133,9 @@ async def generate_workflow(
         )
         logger.info(
             "Workflow generated+deployed: %s (%s) from instruction: %s",
-            result["name"], result["action"], req.instruction[:60],
+            result["name"],
+            result["action"],
+            req.instruction[:60],
         )
         return result
     except Exception as e:
@@ -127,6 +145,7 @@ async def generate_workflow(
 
 # ── Activate / Deactivate ─────────────────────────────────────────────────────
 
+
 @router.post("/activate/{workflow_id}")
 async def activate_workflow(
     workflow_id: str,
@@ -135,6 +154,7 @@ async def activate_workflow(
     """Activate a workflow by ID."""
     _verify(x_cron_secret)
     from app.services.workflow_manager import workflow_manager
+
     ok = await workflow_manager.activate_workflow(workflow_id)
     return {"workflow_id": workflow_id, "active": ok}
 
@@ -147,11 +167,13 @@ async def deactivate_workflow(
     """Deactivate a workflow by ID."""
     _verify(x_cron_secret)
     from app.services.workflow_manager import workflow_manager
+
     ok = await workflow_manager.deactivate_workflow(workflow_id)
     return {"workflow_id": workflow_id, "active": not ok}
 
 
 # ── Self-upgrade trigger (called by n8n itself) ───────────────────────────────
+
 
 @router.post("/self-upgrade")
 async def self_upgrade(
@@ -163,15 +185,15 @@ async def self_upgrade(
     This is how TILLU upgrades itself without human intervention.
     """
     _verify(x_cron_secret)
-    from app.services.workflow_manager import workflow_manager
     from app.core.indian_rules import get_current_ist_context
+    from app.services.workflow_manager import workflow_manager
 
     ist = get_current_ist_context()
     logger.info("Self-upgrade triggered at %s", ist["current_time_ist"])
 
     try:
         results = await workflow_manager.sync_all_from_repo(N8N_WORKFLOWS_DIR)
-        ok    = [r for r in results if r.get("status") == "ok"]
+        ok = [r for r in results if r.get("status") == "ok"]
         fails = [r for r in results if r.get("status") != "ok"]
 
         return {

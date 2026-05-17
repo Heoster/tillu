@@ -36,7 +36,7 @@ class ConversationalChain(BaseChain):
         if not settings.groq_api_key:
             raise ValueError("GROQ_API_KEY not configured")
         
-        model = "llama-3.1-70b-versatile" if use_quality_model else "llama-3.1-8b-instant"
+        model = "llama-3.3-70b-versatile" if use_quality_model else "llama-3.1-8b-instant"
         
         if self._llm is None:
             self._llm = ChatGroq(
@@ -246,7 +246,7 @@ Current time: {ist_ctx['current_datetime_full']}"""
                 },
                 "personality_mode": "warm" if context and context.get("emotional", {}).get("stress_level") == "high" else "sharp",
                 "chain": self.chain_type.value,
-                "model": "groq-llama-3.1-70b" if use_quality else "groq-llama-3.1-8b",
+                "model": "groq-llama-3.3-70b" if use_quality else "groq-llama-3.1-8b",
                 "latency_ms": latency_ms,
                 "tokens_used": response.response_metadata.get("token_usage", {}).get("total_tokens", 0) if hasattr(response, 'response_metadata') else 0,
                 "sources": []

@@ -348,8 +348,8 @@ MIT License - See LICENSE file
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/yourusername/tillu-backend/issues)
-- Discussions: [GitHub Discussions](https://github.com/yourusername/tillu-backend/discussions)
+- Issues: [GitHub Issues](https://github.com/Heoster/tillu-backend/issues)
+- Discussions: [GitHub Discussions](https://github.com/HEOSTER/tillu-backend/discussions)
 
 ---
 

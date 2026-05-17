@@ -54,7 +54,7 @@ Provide a clear, helpful response."""
                 from langchain_groq import ChatGroq
                 self.llm = ChatGroq(
                     api_key=settings.groq_api_key,
-                    model_name="llama-3.1-70b-versatile",
+                    model_name="llama-3.3-70b-versatile",
                     temperature=0.7
                 )
                 logger.info("Groq LLM initialized for ReAct chain")

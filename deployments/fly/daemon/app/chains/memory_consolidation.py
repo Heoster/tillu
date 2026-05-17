@@ -39,7 +39,7 @@ class MemoryConsolidationChain(BaseChain):
         if settings.groq_api_key:
             self.llm = ChatGroq(
                 api_key=settings.groq_api_key,
-                model_name="llama-3.1-70b-versatile",
+                model_name="llama-3.3-70b-versatile",
                 temperature=0.3,
                 max_tokens=2048
             )
@@ -140,7 +140,7 @@ class MemoryConsolidationChain(BaseChain):
                 },
                 "personality_mode": "neutral",
                 "chain": self.chain_type.value,
-                "model": "groq-llama-3.1-70b",
+                "model": "groq-llama-3.3-70b",
                 "latency_ms": elapsed_ms,
                 "tokens_used": 0,
                 "sources": [],

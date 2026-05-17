@@ -59,7 +59,7 @@ class LLMRouter:
             {
                 "name": "groq",
                 "priority": 1,
-                "models": ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"],
+                "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
                 "api_url": "https://api.groq.com/openai/v1/chat/completions",
                 "key_env": "GROQ_API_KEY"
             },
@@ -219,7 +219,7 @@ class LLMRouter:
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "llama-3.1-70b-versatile",
+                    "model": "llama-3.3-70b-versatile",
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": temperature

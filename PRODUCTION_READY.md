@@ -129,7 +129,7 @@ langchain-openai>=0.0.1
 The application now intelligently falls back through available LLMs:
 
 ```
-1. Groq (llama-3.1-70b-versatile) - Primary
+1. Groq (llama-3.3-70b-versatile) - Primary
    ↓ (if not available)
 2. Cerebras (llama-3.3-70b) - Secondary
    ↓ (if not available)

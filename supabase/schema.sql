@@ -924,3 +924,11 @@ CREATE POLICY service_role_bypass_people_knowledge ON people_knowledge
 DROP POLICY IF EXISTS service_role_bypass_client_registry ON client_registry;
 CREATE POLICY service_role_bypass_client_registry ON client_registry
     FOR ALL TO service_role USING (true);
+
+DROP POLICY IF EXISTS service_role_bypass_notification_subscriptions ON notification_subscriptions;
+CREATE POLICY service_role_bypass_notification_subscriptions ON notification_subscriptions
+    FOR ALL TO service_role USING (true);
+
+DROP POLICY IF EXISTS service_role_bypass_notification_settings ON notification_settings;
+CREATE POLICY service_role_bypass_notification_settings ON notification_settings
+    FOR ALL TO service_role USING (true);

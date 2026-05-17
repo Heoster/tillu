@@ -61,8 +61,8 @@ def providers() -> dict[str, bool]:
 
 GROQ_MODELS = {
     "fast":    "llama-3.1-8b-instant",
-    "quality": "llama-3.1-70b-versatile",
-    "coding":  "llama-3.1-70b-versatile",
+    "quality": "llama-3.3-70b-versatile",
+    "coding":  "llama-3.3-70b-versatile",
 }
 
 CEREBRAS_MODELS = {
@@ -209,7 +209,7 @@ async def invoke(
     model    = sel["model"]
     client   = sel["client"]
 
-    logger.info("LLM route: task=%s lang=%s → %s/%s", task, lang, provider, model)
+    logger.info("LLM route: task=%s lang=%s -> %s/%s", task, lang, provider, model)
 
     content = ""
 
@@ -222,7 +222,11 @@ async def invoke(
                 json={"model": model, "messages": messages,
                       "max_tokens": max_tokens, "temperature": temperature},
             )
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                logger.error("Groq API error", status=r.status_code, response=r.text, payload={"model": model, "messages": messages})
+                raise RuntimeError(f"Groq API error (HTTP {r.status_code}): {r.text}") from e
             content = r.json()["choices"][0]["message"]["content"]
 
     elif client == "cerebras":

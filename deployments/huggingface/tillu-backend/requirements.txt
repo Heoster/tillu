@@ -1,8 +1,23 @@
-# TILLU Backend - HuggingFace Spaces
-# Minimal dependencies for API server
+# TILLU Backend - HuggingFace Spaces Production
+# Full production dependencies
 
+# Core
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# HTTP Client
 httpx>=0.24.0
+
+# Environment
 python-dotenv>=1.0.0
+
+# Supabase (optional - for real database)
+# supabase>=2.0.0
+
+# Redis (optional - for caching)
+# redis>=5.0.0
+
+# LLM Providers (optional - for real AI)
+# groq>=0.4.0

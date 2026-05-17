@@ -15,8 +15,8 @@ All LLM models in the TILLU router have been verified and are production-ready. 
 **Status**: Active
 **Models**: 3
 - `llama-3.1-8b-instant` (fast)
-- `llama-3.1-70b-versatile` (quality)
-- `llama-3.1-70b-versatile` (coding)
+- `llama-3.3-70b-versatile` (quality)
+- `llama-3.3-70b-versatile` (coding)
 
 **Characteristics**:
 - Fastest provider (200-700ms)

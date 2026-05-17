@@ -33,7 +33,7 @@ class EmpathyChain(BaseChain):
         if settings.groq_api_key:
             self.llm = ChatGroq(
                 api_key=settings.groq_api_key,
-                model_name="llama-3.1-70b-versatile",
+                model_name="llama-3.3-70b-versatile",
                 temperature=0.9,  # Higher for warmth
                 max_tokens=1024
             )
@@ -138,7 +138,7 @@ Respond as a caring, supportive friend would."""
                 },
                 "personality_mode": "empathic",
                 "chain": self.chain_type.value,
-                "model": "groq-llama-3.1-70b",
+                "model": "groq-llama-3.3-70b",
                 "latency_ms": elapsed_ms,
                 "tokens_used": response.response_metadata.get("token_usage", {}).get("total_tokens", 0) if hasattr(response, 'response_metadata') else 0,
                 "sources": []

@@ -44,7 +44,7 @@ class PersonalityEvolutionChain(BaseChain):
         if settings.groq_api_key:
             self.llm = ChatGroq(
                 api_key=settings.groq_api_key,
-                model_name="llama-3.1-70b-versatile",
+                model_name="llama-3.3-70b-versatile",
                 temperature=0.4,
                 max_tokens=1024
             )
@@ -171,7 +171,7 @@ class PersonalityEvolutionChain(BaseChain):
                 },
                 "personality_mode": "neutral",
                 "chain": self.chain_type.value,
-                "model": "groq-llama-3.1-70b",
+                "model": "groq-llama-3.3-70b",
                 "latency_ms": elapsed_ms,
                 "tokens_used": 0,
                 "sources": [],

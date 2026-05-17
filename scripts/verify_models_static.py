@@ -122,7 +122,7 @@ def verify_models():
     print_section("Critical Model Verification")
     
     critical_checks = [
-        ("Groq", "quality", "llama-3.1-70b-versatile"),
+        ("Groq", "quality", "llama-3.3-70b-versatile"),
         ("Together AI", "quality", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
         ("Cerebras", "quality", "qwen-3-235b-a22b-instruct-2507"),
         ("HuggingFace", "quality", "meta-llama/Llama-3.3-70B-Instruct"),

@@ -62,7 +62,7 @@ class AnalysisChain(BaseChain):
         if not self.llm and settings.groq_api_key:
             self.llm = ChatGroq(
                 api_key=settings.groq_api_key,
-                model_name="llama-3.1-70b-versatile",
+                model_name="llama-3.3-70b-versatile",
                 temperature=0.3
             )
     
